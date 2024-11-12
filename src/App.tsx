@@ -7,6 +7,8 @@ import StartScreen from './components/StartScreen'
 import Question from './components/Question'
 import { QuestionType } from './types'
 import NextButton from './components/NextButton'
+import Progress from './components/Progress'
+import FinishedScreen from './components/FinishedScreen'
 
 export type StatusType = 'loading' | 'error' | 'ready' | 'active' | 'finished'
 
@@ -24,6 +26,7 @@ export type Action =
   | { type: 'start' }
   | { type: 'newAnswer'; payload: number }
   | { type: 'nextQuestion' }
+  | { type: 'finish' }
 
 const initialState: QuestionsStateType = {
   questions: [],
@@ -71,18 +74,25 @@ function reducer(
         currIndex: state.currIndex + 1,
         answer: null,
       }
+    case 'finish':
+      return {
+        ...state,
+        status: 'finished',
+      }
     default:
       throw new Error('Action unknown')
   }
 }
 
 export default function App() {
-  const [{ questions, status, currIndex, answer }, dispatch] = useReducer(
-    reducer,
-    initialState
-  )
+  const [{ questions, status, currIndex, answer, points }, dispatch] =
+    useReducer(reducer, initialState)
 
   const numberOfQuestions = questions.length
+  const maxPossiblePoints = questions.reduce(
+    (prev, cur) => prev + cur.points,
+    0
+  )
 
   useEffect(() => {
     fetch('http://localhost:8000/questions')
@@ -105,13 +115,28 @@ export default function App() {
         )}
         {status === 'active' && (
           <>
+            <Progress
+              idx={currIndex}
+              points={points}
+              numberOfQuestions={numberOfQuestions}
+              maxPoints={maxPossiblePoints}
+              answer={answer}
+            />
             <Question
               question={questions[currIndex]}
               answer={answer}
               dispatch={dispatch}
             />
-            <NextButton answer={answer} dispatch={dispatch} />
+            <NextButton
+              answer={answer}
+              dispatch={dispatch}
+              idx={currIndex}
+              numberOfQuestions={numberOfQuestions}
+            />
           </>
+        )}
+        {status === 'finished' && (
+          <FinishedScreen maxPoints={maxPossiblePoints} points={points} />
         )}
       </Main>
     </div>
