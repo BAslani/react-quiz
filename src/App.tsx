@@ -6,6 +6,7 @@ import ErrorElement from './components/Error'
 import StartScreen from './components/StartScreen'
 import Question from './components/Question'
 import { QuestionType } from './types'
+import NextButton from './components/NextButton'
 
 export type StatusType = 'loading' | 'error' | 'ready' | 'active' | 'finished'
 
@@ -22,6 +23,7 @@ export type Action =
   | { type: 'dataFailed' }
   | { type: 'start' }
   | { type: 'newAnswer'; payload: number }
+  | { type: 'nextQuestion' }
 
 const initialState: QuestionsStateType = {
   questions: [],
@@ -63,6 +65,12 @@ function reducer(
             : state.points,
       }
     }
+    case 'nextQuestion':
+      return {
+        ...state,
+        currIndex: state.currIndex + 1,
+        answer: null,
+      }
     default:
       throw new Error('Action unknown')
   }
@@ -96,11 +104,14 @@ export default function App() {
           />
         )}
         {status === 'active' && (
-          <Question
-            question={questions[currIndex]}
-            answer={answer}
-            dispatch={dispatch}
-          />
+          <>
+            <Question
+              question={questions[currIndex]}
+              answer={answer}
+              dispatch={dispatch}
+            />
+            <NextButton answer={answer} dispatch={dispatch} />
+          </>
         )}
       </Main>
     </div>
