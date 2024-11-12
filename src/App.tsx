@@ -18,6 +18,7 @@ type QuestionsStateType = {
   currIndex: number
   answer: number | null
   points: number
+  highScore: number
 }
 
 export type Action =
@@ -27,6 +28,7 @@ export type Action =
   | { type: 'newAnswer'; payload: number }
   | { type: 'nextQuestion' }
   | { type: 'finish' }
+  | { type: 'restart' }
 
 const initialState: QuestionsStateType = {
   questions: [],
@@ -34,6 +36,7 @@ const initialState: QuestionsStateType = {
   currIndex: 0,
   answer: null,
   points: 0,
+  highScore: 0,
 }
 
 function reducer(
@@ -78,6 +81,15 @@ function reducer(
       return {
         ...state,
         status: 'finished',
+        highScore:
+          state.points > state.highScore ? state.points : state.highScore,
+      }
+    case 'restart':
+      return {
+        ...initialState,
+        highScore: state.highScore,
+        status: 'ready',
+        questions: state.questions,
       }
     default:
       throw new Error('Action unknown')
@@ -85,8 +97,10 @@ function reducer(
 }
 
 export default function App() {
-  const [{ questions, status, currIndex, answer, points }, dispatch] =
-    useReducer(reducer, initialState)
+  const [
+    { questions, status, currIndex, answer, points, highScore },
+    dispatch,
+  ] = useReducer(reducer, initialState)
 
   const numberOfQuestions = questions.length
   const maxPossiblePoints = questions.reduce(
@@ -136,7 +150,12 @@ export default function App() {
           </>
         )}
         {status === 'finished' && (
-          <FinishedScreen maxPoints={maxPossiblePoints} points={points} />
+          <FinishedScreen
+            maxPoints={maxPossiblePoints}
+            points={points}
+            highScore={highScore}
+            dispatch={dispatch}
+          />
         )}
       </Main>
     </div>
